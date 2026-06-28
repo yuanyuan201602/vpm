@@ -1,0 +1,9 @@
+# Banned words list — one pattern per line, grep -i compatible
+# Add project-specific terms that must not appear in generated output.
+# Lines starting with # are comments.
+
+# Example patterns (replace with project-specific ones):
+# TODO
+# FIXME
+# placeholder
+# lorem ipsum

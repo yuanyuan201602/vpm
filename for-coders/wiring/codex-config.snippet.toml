@@ -1,0 +1,14 @@
+# Add to your Codex / OpenAI Codex config
+# This injects VPM authority instructions at the start of every Codex session
+
+[instructions]
+system_prompt_prefix = """
+You are working on a VPM-governed project. Read AGENTS.md before taking any action.
+Key rules:
+- Run bash for-coders/scripts/check_gates.sh before declaring any milestone complete
+- Do not self-certify judgment calls in acceptance criteria
+- If the PRD changes, stop and re-derive acceptance criteria before continuing
+"""
+
+[context]
+always_include = ["AGENTS.md", "docs/PRD_*.md", "docs/ACCEPTANCE_*.md"]

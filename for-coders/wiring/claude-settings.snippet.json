@@ -1,0 +1,27 @@
+{
+  "_comment": "Add these entries to your ~/.claude/settings.json (or project .claude/settings.json)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash for-coders/hooks/session_start.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash for-coders/scripts/check_gates.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
