@@ -77,7 +77,7 @@ PRD 变更时：冻结旧方向（标记 legacy），以新版本重新推导验
 ## 安装（Claude Code + Codex）
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/vpm.git
+git clone https://github.com/yuanyuan201602/vpm.git
 cd vpm
 bash for-coders/install.sh
 ```

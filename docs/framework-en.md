@@ -79,7 +79,7 @@ Banned words, build success, byte alignment — grep and run. Age-appropriatenes
 ## Install (Claude Code + Codex)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/vpm.git
+git clone https://github.com/yuanyuan201602/vpm.git
 cd vpm
 bash for-coders/install.sh
 ```
