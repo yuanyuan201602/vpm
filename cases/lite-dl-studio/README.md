@@ -1,55 +1,49 @@
 # Case: Lite DeepLearning Studio
 
 **Outcome: ✅ Converged**
-**VPM pattern: Clear byte-level invariant + subprocess ground-truth verification eliminated the entire "it works on my machine" failure class.**
+**VPM pattern: One clear, deterministic invariant (in-app model ↔ exported bundle must be byte-aligned) + subprocess ground-truth verification. The acceptance signal was a fact, not an opinion — so it could not be faked.**
 
 ---
 
 ## The signals
 
 ```
-npm run build              → passing    ✓
-npm run test:unit          → passing    ✓
-
-invariant:app-export-alignment → pass  ✓
-subprocess:ground-truth        → pass  ✓
+122 tests passing       ✓
+ruff (lint) clean       ✓
+subprocess: exported predict.py / run.py actually runs and predicts   ✓
 ```
 
 ---
 
 ## What happened
 
-The project was a lightweight deep learning model studio with an export function. The core invariant was: **the model displayed in the app and the model written to the export file must be byte-identical.**
+The project is a K12 AI competition workbench: students complete an end-to-end AI project in the browser with nothing to install. The flow is locked to four ordered steps — **prepare data → train model → test → export materials** — with step N+1 greyed out until step N is done.
 
-This is a deterministic check. Byte equality is verifiable with a hash. There is no judgment involved.
+Training happens locally in sklearn; the export is a zip containing a runnable Python pipeline plus a deployment layer for the classroom hardware and the competition submission docs. By v0.7.0 it covered text, image, audio, QA, sensor, OCR, and a trainable object detector — 37 Python files, 122 passing tests.
 
-The team encoded this as the primary acceptance gate from day one:
+The core decision that made it converge was naming a single hard invariant early:
 
-```bash
-# check_alignment.sh
-APP_HASH=$(python get_app_model_hash.py)
-EXPORT_HASH=$(sha256sum exported_model.bin | cut -d' ' -f1)
-[ "$APP_HASH" = "$EXPORT_HASH" ] && echo "PASS" || echo "FAIL: app/export mismatch"
-```
+> **The model running inside the app and the model written into the export must be byte-aligned.**
 
-This script ran as the PreToolUse gate on every agent action that touched model state. The agent could not proceed past any model-modifying step without the invariant passing.
+This is a deterministic fact. If the feature-extraction logic in `app/ml/` changes, the corresponding Python template string in `template_service.py` must change with it, or the exported model diverges from the in-app one. The team captured this per capability as an explicit invariant table (the joblib storage keys and feature pipeline for each of text/image/audio/QA/sensor/detector).
 
-The second key decision: use subprocess ground-truth verification. Rather than asking the agent "did the export succeed?", the verification script actually loaded the exported file in a subprocess and ran a forward pass. The result had to match the expected output to a numeric tolerance.
-
-Self-report was explicitly banned as evidence. The agent's confirmation that the export "looked correct" was not accepted. The subprocess result was the only valid signal.
+The verification method was the key: rather than asking the agent "did the export work?", the tests **run the exported `predict.py` / `run.py` in a subprocess** and check the real output (`test_generation_services.py`). A synthetic-data fallback guarantees that even an export with no labels can retrain and run. Self-report was never the evidence; the subprocess result was.
 
 ---
 
 ## The alignment(s)
 
-- **Rule 2**: The app/export byte-alignment check was the product value line. Build success and unit tests were engineering health. The project did not declare completion until the byte-alignment check passed.
-- **Rule 5**: Byte alignment is a deterministic fact. grep and run. The subprocess hash check was the correct verification method. No human judgment required — which also means no human subjectivity could pass a broken export.
+- **Rule 5 (deterministic checks for deterministic facts):** byte alignment between app and export is not a judgment call. It is verified by actually running the exported code in a subprocess and comparing real output — not by the agent asserting it looks correct.
+- **Rule 2:** unit tests and lint were the engineering health line; the byte-aligned, actually-runnable export was the product value line. The project's value claim ("students get a bundle that really runs") was the thing tested directly.
 
 ---
 
 ## Source
 
-Original retrospective: internal project log
-Operator: solo developer
-Stack: Claude Code + Codex, Python + TypeScript
-Date: 2026 Q1
+Original retrospective: the operator's own project log, dated 2026-06-21, on v0.7.0 (2026-06-14).
+Operator: solo developer with Claude + Codex, for a school K12 AI program.
+Stack: FastAPI + sklearn + ONNX (MobileNetV2 / SSD), vanilla JS front end.
+
+---
+
+*The lesson is not "write more tests." It is: when the core promise can be stated as a deterministic invariant, verify it by running the real artifact in a subprocess — so neither human optimism nor agent self-report can pass a broken export.*
